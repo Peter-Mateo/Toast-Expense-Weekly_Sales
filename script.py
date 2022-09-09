@@ -1,36 +1,28 @@
 import datetime
 import os
 from datetime import datetime
+from pathlib import Path
 
 import openpyxl
+import pandas as pd
+import win32com.client as client
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import (Alignment, Border, Font, PatternFill, Protection,
                              Side)
 
 import models.xls_to_xlsx as xls
 
-"""
-All sheets in the weekly sales are:
-Summary
-Hourly Breakdown
-Weekday Breakdown
-"""
+# Converts the xls file to xlsx format
+xls.converter()
 
-# Checks if their are any files already in the new version
-if len(os.listdir(os.getcwd() + "/new version/")) == 0:
-    # Converts the xls file to xlsx format
-    xls.converter()
 # Creates the new Workbook
-main_workbook = Workbook()
+main_workbook = load_workbook("C:\\Users\\12392\\Desktop\\Github\\Toast-Expense-Weekly_Sales\\template\\template.xlsx")
 main_sheet = main_workbook.active
 main_sheet.title = "Date" # Fill in the date with the last date
 
 
-
-
-
-
-""" Creates the styling of the sheet """
+"""
+#Creates the styling of the sheet 
 # Column width 
 main_sheet.column_dimensions['A'].width = 19.58
 main_sheet.column_dimensions['B'].width = 11.15
@@ -110,7 +102,7 @@ main_sheet['G4'] = 'SAT'
 main_sheet['H4'] = 'SUN'
 
 # Entry Box
-""" Fix Center Alignment """
+#Fix Center Alignment 
 main_sheet.merge_cells('L5:M5')
 main_sheet['L5'] = 'Entry'
 main_sheet['L5'].font = Font(bold=True, size= 11)
@@ -336,106 +328,310 @@ main_sheet['O2'].font = Font(bold=True, size=14)
 main_sheet['O2'].fill = PatternFill('solid', start_color='D9D9D9')
 main_sheet['P1'].fill = PatternFill('solid', start_color='D9D9D9')
 main_sheet['P2'].fill = PatternFill('solid', start_color='D9D9D9')
+"""
 
+dir = os.getcwd() + '/new version/'
 
-wb = load_workbook("C:\\Users\\12392\\Desktop\\Github\\Toast-Expense-Weekly_Sales\\new version\\Sales Report Daily 8-27.xlsx")
-# Opens the first sheet in the workbook
-ws = wb['Summary']
+for files in os.listdir(dir):
+    wb = load_workbook(dir + files)
+    # Opens the first sheet in the workbook
+    ws = wb['Summary']
 
-## Start of Everything 
-## Data Sraping 
-""" Friday """
-# Date
-fri_date = str(ws['A2'].value)
-final = fri_date.split(' ')
-time = final[0]
-row_date = datetime.strptime(time, '%m/%d/%y')
-main_sheet['F5'] = row_date.strftime('%m/%d/%y')
-main_sheet['f5'].alignment = Alignment(horizontal = 'center')
-""" Searches A column for Headers """
-def search_value_in_column(ws, search_string, column='A'):
-    for row in range(1, ws.max_row + 1):
-        coordinate = "{}{}".format(column, row)
-        if ws[coordinate].value == search_string:
-            return column, row
-    return column, None
+    """ Start of Everything """
+    # Locates Payment Summary 
+    payment_summary = xls.search_value_in_column(ws, 'Payment Summary')
+    # Locates Total in Payment Summary row
+    payment_summary_total = xls.search_value_in_row(ws, 'Total', payment_summary[1])
+    # Locates Credit in Payment Summary 
+    credit_location = xls.search_value_in_column(ws, 'Credit', 'B')
+    # Total deposit
+    x = credit_location[1]
+    y = payment_summary_total[0]
+    z = y + str(x)
+    total_deposit = ws[z].value
+    # Loops through each of the files in order fill in the data
+    if main_sheet['B7'].value == None:
+        main_sheet['B7'] = total_deposit
+    elif main_sheet['C7'].value == None:
+        main_sheet['C7'] = total_deposit
+    elif main_sheet['D7'].value == None:
+        main_sheet['D7'] = total_deposit
+    elif main_sheet['E7'].value == None:
+        main_sheet['E7'] = total_deposit
+    elif main_sheet['F7'].value == None:
+        main_sheet['F7'] = total_deposit
+    elif main_sheet['G7'].value == None:
+        main_sheet['G7'] = total_deposit
+    elif main_sheet['H7'].value == None:
+        main_sheet['H7'] = total_deposit
 
-""" Searches Row for total """
-def search_value_in_row(ws, search_string, row):
-    for column in ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H','I','K']:
-        coordinate = "{}{}".format(column, row)
-        if ws[coordinate].value == search_string:
-            return column, row
-    return row, None
+    # Gift Cards SOlD 
+    sales_summary = xls.search_value_in_column(ws, 'Sales Summary')
+    deferred = xls.search_value_in_row(ws, 'Deferred', sales_summary[1])
+    x = int(sales_summary[1]) + 1
+    y = deferred[0]
+    z = y + str(x)
+    gift_sold_value = ws[z].value
+    gift_sold = gift_sold_value.strip('$')
+    # Loops through each of the files in order fill in the data
+    if main_sheet['B8'].value == None:
+        main_sheet['B8'] = int(gift_sold)
+    elif main_sheet['C8'].value == None:
+        main_sheet['C8'] = int(gift_sold)
+    elif main_sheet['D8'].value == None:
+        main_sheet['D8'] = int(gift_sold)
+    elif main_sheet['E8'].value == None:
+        main_sheet['E8'] = int(gift_sold)
+    elif main_sheet['F8'].value == None:
+        main_sheet['F8'] = int(gift_sold)
+    elif main_sheet['G8'].value == None:
+        main_sheet['G8'] = int(gift_sold)
+    elif main_sheet['H8'].value == None:
+        main_sheet['H8'] = int(gift_sold)
 
+    # Gift Cards REDEEMED
+    gift_card_coords = xls.search_value_in_column(ws, 'Gift Card', 'B')
+    x = gift_card_coords[1]
+    y = payment_summary_total[0]
+    z = y + str(x)
+    gift_card_total = ws[z].value
+    # Loops through each of the files in order fill in the data
+    if main_sheet['B9'].value == None:
+        main_sheet['B9'] = gift_card_total
+    elif main_sheet['C9'].value == None:
+        main_sheet['C9'] = gift_card_total
+    elif main_sheet['D9'].value == None:
+        main_sheet['D9'] = gift_card_total
+    elif main_sheet['E9'].value == None:
+        main_sheet['E9'] = gift_card_total
+    elif main_sheet['F9'].value == None:
+        main_sheet['F9'] = gift_card_total
+    elif main_sheet['G9'].value == None:
+        main_sheet['G9'] = gift_card_total
+    elif main_sheet['H9'].value == None:
+        main_sheet['H9'] = gift_card_total
 
-# Locates Payment Summary 
-payment_summary = search_value_in_column(ws, 'Payment Summary')
-# Locates Total in Payment Summary row
-payment_summary_total = search_value_in_row(ws, 'Total', payment_summary[1])
-# Locates Credit in Payment Summary 
-credit_location = search_value_in_column(ws, 'Credit', 'B')
-# Total deposit
-x = credit_location[1]
-y = payment_summary_total[0]
-z = y + str(x) 
-total_deposit = ws[z].value
-main_sheet['F7'] = total_deposit
+    # CASH SALES
+    cash_location = xls.search_value_in_column(ws, 'Cash', 'B')
+    x = cash_location[1]
+    y = payment_summary_total[0]
+    z = y + str(x)
+    cash_total = ws[z].value
+    # Loops through each of the files in order fill in the data
+    if main_sheet['B12'].value == None:
+        main_sheet['B12'] = cash_total
+    elif main_sheet['C12'].value == None:
+        main_sheet['C12'] = cash_total
+    elif main_sheet['D12'].value == None:
+        main_sheet['D12'] = cash_total
+    elif main_sheet['E12'].value == None:
+        main_sheet['E12'] = cash_total
+    elif main_sheet['F12'].value == None:
+        main_sheet['F12'] = cash_total
+    elif main_sheet['G12'].value == None:
+        main_sheet['G12'] = cash_total
+    elif main_sheet['H12'].value == None:
+        main_sheet['H12'] = cash_total
 
-# Gift Cards SOlD 
-sales_summary = search_value_in_column(ws, 'Sales Summary')
-deferred = search_value_in_row(ws, 'Deferred', sales_summary[1])
-x = int(sales_summary[1]) + 1
-y = deferred[0]
-z = y + str(x)
-gift_sold_value = ws[z].value
-gift_sold = gift_sold_value.strip('$')
-main_sheet['F8'] = float(gift_sold)
+    # UBER EATS
+    uber_eats = xls.search_value_in_column(ws, 'Uber Eats', 'B')
+    x = uber_eats[1]
+    y = payment_summary_total[0]
+    z = y + str(x)
+    uber_eats_total = ws[z].value
+    # Loops through each of the files in order fill in the data
+    if main_sheet['B13'].value == None:
+        main_sheet['B13'] = uber_eats_total
+    elif main_sheet['C13'].value == None:
+        main_sheet['C13'] = uber_eats_total
+    elif main_sheet['D13'].value == None:
+        main_sheet['D13'] = uber_eats_total
+    elif main_sheet['E13'].value == None:
+        main_sheet['E13'] = uber_eats_total
+    elif main_sheet['F13'].value == None:
+        main_sheet['F13'] = uber_eats_total
+    elif main_sheet['G13'].value == None:
+        main_sheet['G13'] = uber_eats_total
+    elif main_sheet['H13'].value == None:
+        main_sheet['H13'] = uber_eats_total
 
-# Gift Cards REDEEMED
-gift_card_coords = search_value_in_column(ws, 'Gift Card', 'B')
-x = gift_card_coords[1]
-y = payment_summary_total[0]
-z = y + str(x)
-gift_card_total = ws[z].value
-main_sheet['F9'] = gift_card_total
+    # TIPS PAID
+    tips_column = xls.search_value_in_row(ws, 'Tips', payment_summary[1])
+    gratuity_column = xls.search_value_in_row(ws, 'Gratuity', payment_summary[1])
+    other_payment = xls.search_value_in_column(ws, 'Other', 'B')
+    tips_coords = tips_column[0] + str(other_payment[1] + 1)
+    gratuity_coords = gratuity_column[0] + str(other_payment[1] + 1)
+    tips = ws[tips_coords].value
+    gratuity = ws[gratuity_coords].value
+    tips_paid = tips + gratuity
+    # Loops through each of the files in order fill in the data
+    if main_sheet['B14'].value == None:
+        main_sheet['B14'] = tips_paid
+    elif main_sheet['C14'].value == None:
+        main_sheet['C14'] = tips_paid
+    elif main_sheet['D14'].value == None:
+        main_sheet['D14'] = tips_paid
+    elif main_sheet['E14'].value == None:
+        main_sheet['E14'] = tips_paid
+    elif main_sheet['F14'].value == None:
+        main_sheet['F14'] = tips_paid
+    elif main_sheet['G14'].value == None:
+        main_sheet['G14'] = tips_paid
+    elif main_sheet['H14'].value == None:
+        main_sheet['H14'] = tips_paid
 
-# CC FEES
-"""Not Possible"""
+    # S-FOOD
+    sales_categories = xls.search_value_in_column(ws, 'Sales Categories')
+    gross_amnt = xls.search_value_in_row(ws, 'Gross Amt', sales_categories[1])
+    food = xls.search_value_in_column(ws, 'Food', 'B')
+    temp = gross_amnt[0] + str(food[1])
+    temp2 = gross_amnt[0] + str(food[1]- 1)
+    temp_total = ws[temp].value
+    temp_total2 = ws[temp2].value
+    final = temp_total + temp_total2
+    # Loops through each of the files in order fill in the data
+    if main_sheet['B15'].value == None:
+        main_sheet['B15'] = final
+    elif main_sheet['C15'].value == None:
+        main_sheet['C15'] = final
+    elif main_sheet['D15'].value == None:
+        main_sheet['D15'] = final
+    elif main_sheet['E15'].value == None:
+        main_sheet['E15'] = final
+    elif main_sheet['F15'].value == None:
+        main_sheet['F15'] = final
+    elif main_sheet['G15'].value == None:
+        main_sheet['G15'] = final
+    elif main_sheet['H15'].value == None:
+        main_sheet['H15'] = final
 
-# CR. CARD DEPOSIT
-""" Not Possible Need CC FEES"""
+    #S-BAR
+    no_category = xls.search_value_in_column(ws, 'No Category', 'B')
+    temp =  gross_amnt[0] + str(no_category[1] + 1)
+    temp3 = ws[temp].value
+    sub = temp3 - final
+    # Loops through each of the files in order fill in the data
+    if main_sheet['B16'].value == None:
+        main_sheet['B16'] = sub
+    elif main_sheet['C16'].value == None:
+        main_sheet['C16'] = sub
+    elif main_sheet['D16'].value == None:
+        main_sheet['D16'] = sub
+    elif main_sheet['E16'].value == None:
+        main_sheet['E16'] = sub
+    elif main_sheet['F16'].value == None:
+        main_sheet['F16'] = sub
+    elif main_sheet['G16'].value == None:
+        main_sheet['G16'] = sub
+    elif main_sheet['H16'].value == None:
+        main_sheet['H16'] = sub
 
-# CASH SALES
-cash_location = search_value_in_column(ws, 'Cash', 'B')
-x = cash_location[1]
-y = payment_summary_total[0]
-z = y + str(x)
-cash_total = ws[z].value
-main_sheet['F12'] = cash_total
+    # COMP PROMO
+    menu_item_discounts = xls.search_value_in_column(ws, 'Menu Item Discounts')
+    comp_item = xls.search_value_in_column(ws, 'Comp % Item', 'B')
+    menu_amount = xls.search_value_in_row(ws, 'Amount', menu_item_discounts[1])
+    comp_item_coords = menu_amount[0] + str(comp_item[1])
+    early_bird_coords = menu_amount[0] + str(comp_item[1] + 1)
+    happy_hr_coords = menu_amount[0] + str(comp_item[1] + 2)
+    comp_item = ws[comp_item_coords].value
+    early_bird = ws[early_bird_coords].value
+    happy_hr = ws[happy_hr_coords].value
+    final = comp_item + early_bird + happy_hr
+    # Loops through each of the files in order fill in the data
+    if main_sheet['B18'].value == None:
+        main_sheet['B18'] = final
+    elif main_sheet['C18'].value == None:
+        main_sheet['C18'] = final
+    elif main_sheet['D18'].value == None:
+        main_sheet['D18'] = final
+    elif main_sheet['E18'].value == None:
+        main_sheet['E18'] = final
+    elif main_sheet['F18'].value == None:
+        main_sheet['F18'] = final
+    elif main_sheet['G18'].value == None:
+        main_sheet['G18'] = final
+    elif main_sheet['H18'].value == None:
+        main_sheet['H18'] = final
 
-# UBER EATS
-uber_eats = search_value_in_column(ws, 'Uber Eats', 'B')
-x = uber_eats[1]
-y = payment_summary_total[0]
-z = y + str(x)
-uber_eats_total = ws[z].value
-main_sheet['F13'] = uber_eats_total
+    # MGR DISCOUNT
+    check_discounts = xls.search_value_in_column(ws, 'Check Discounts')
+    manager_comp = xls.search_value_in_column(ws, 'Manager Comp - Check', 'B')
+    price = menu_amount[0] + str(manager_comp[1])
+    final = ws[price].value
+    # Loops through each of the files in order fill in the data
+    if main_sheet['B19'].value == None:
+        main_sheet['B19'] = final
+    elif main_sheet['C19'].value == None:
+        main_sheet['C19'] = final
+    elif main_sheet['D19'].value == None:
+        main_sheet['D19'] = final
+    elif main_sheet['E19'].value == None:
+        main_sheet['E19'] = final
+    elif main_sheet['F19'].value == None:
+        main_sheet['F19'] = final
+    elif main_sheet['G19'].value == None:
+        main_sheet['G19'] = final
+    elif main_sheet['H19'].value == None:
+        main_sheet['H19'] = final
 
-# TIPS PAID
-tips_column = search_value_in_row(ws, 'Tips', payment_summary[1])
-gratuity_column = search_value_in_row(ws, 'Gratuity', payment_summary[1])
-other_payment = search_value_in_column(ws, 'Other', 'B')
-tips_coords = tips_column[0] + str(other_payment[1] + 1)
-gratuity_coords = gratuity_column[0] + str(other_payment[1] + 1)
-tips = ws[tips_coords].value
-gratuity = ws[gratuity_coords].value
-tips_paid = tips + gratuity
-main_sheet['F14'] = tips_paid
+    #SERV.DISCOUNT
+    price = menu_amount[0] + str(manager_comp[1] - 1)
+    final = ws[price].value
+    # Loops through each of the files in order fill in the data
+    if main_sheet['B21'].value == None:
+        main_sheet['B21'] = final
+    elif main_sheet['C21'].value == None:
+        main_sheet['C21'] = final
+    elif main_sheet['D21'].value == None:
+        main_sheet['D21'] = final
+    elif main_sheet['E21'].value == None:
+        main_sheet['E21'] = final
+    elif main_sheet['F21'].value == None:
+        main_sheet['F21'] = final
+    elif main_sheet['G21'].value == None:
+        main_sheet['G21'] = final
+    elif main_sheet['H21'].value == None:
+        main_sheet['H21'] = final
 
-# S-FOOD
+    # QSA
+    comp_item = xls.search_value_in_column(ws, 'Comp % Item', 'B')
+    qsa_coords = menu_amount[0] + str(comp_item[1] + 3)
+    qsa = ws[qsa_coords].value
+    # Loops through each of the files in order fill in the data
+    if main_sheet['B22'].value == None:
+        main_sheet['B22'] = qsa
+    elif main_sheet['C22'].value == None:
+        main_sheet['C22'] = qsa
+    elif main_sheet['D22'].value == None:
+        main_sheet['D22'] = qsa
+    elif main_sheet['E22'].value == None:
+        main_sheet['E22'] = qsa
+    elif main_sheet['F22'].value == None:
+        main_sheet['F22'] = qsa
+    elif main_sheet['G22'].value == None:
+        main_sheet['G22'] = qsa
+    elif main_sheet['H22'].value == None:
+        main_sheet['H22'] = qsa
 
-
-
-# Saves the New Weekly Sales Report
-main_workbook.save("Weekly_Sales.xlsx")
+    # SALES TAX
+    taxes = xls.search_value_in_column(ws, 'Tax', 'B')
+    price = menu_amount[0] + str(taxes[1] + 1)
+    final = ws[price].value
+    # Loops through each of the files in order fill in the data
+    if main_sheet['B23'].value == None:
+        main_sheet['B23'] = final
+    elif main_sheet['C23'].value == None:
+        main_sheet['C23'] = final
+    elif main_sheet['D23'].value == None:
+        main_sheet['D23'] = final
+    elif main_sheet['E23'].value == None:
+        main_sheet['E23'] = final
+    elif main_sheet['F23'].value == None:
+        main_sheet['F23'] = final
+    elif main_sheet['G23'].value == None:
+        main_sheet['G23'] = final
+    elif main_sheet['H23'].value == None:
+        main_sheet['H23'] = final
+    
+    # Saves the New Weekly Sales Report
+    main_workbook.save("Weekly_Sales.xlsx")
