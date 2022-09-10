@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+import openpyxl
 import win32com.client as client
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import (Alignment, Border, Font, PatternFill, Protection,
@@ -122,7 +123,6 @@ for files in file_list:
     y = payment_summary_total[0]
     z = y + str(x)
     cash_total = ws[z].value
-    print(cash_total)
     # Loops through each of the files in order fill in the data
     if cash_total > 0:
         if files == file_list[0]:
@@ -365,6 +365,6 @@ for files in file_list:
 
 # Clears the new versions folder
 [f.unlink() for f in Path("C:\\Users\\12392\\Desktop\\Github\\Toast-Expense-Weekly_Sales\\new version").glob("*") if f.is_file()]
-
+print("I'm All done!")
 # Saves the New Weekly Sales Report
 main_workbook.save("Weekly_Sales.xlsx")
