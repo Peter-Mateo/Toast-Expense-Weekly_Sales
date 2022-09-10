@@ -5,16 +5,13 @@ import win32com.client as client
 
 def converter():
     excel = client.Dispatch("excel.application")
-    num = 1
-    numb = str(num)
     # Converts the files from xls to xlsx
     for file in os.listdir(os.getcwd() + "/old version/"):
         filename, fileextenstion = os.path.splitext(file)
         wb = excel.Workbooks.Open(os.getcwd() + "/old version/" + file)
-        output_path = os.getcwd() + "/new version/" +  numb + filename
+        output_path = os.getcwd() + "/new version/" + filename
         wb.SaveAs(output_path, 51)
         wb.Close()
-        num += 1
     excel.Quit()
 
 """ Searches A column for Headers """
