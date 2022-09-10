@@ -1,9 +1,6 @@
-import datetime
 import os
-from datetime import datetime
 from pathlib import Path
 
-import openpyxl
 import win32com.client as client
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import (Alignment, Border, Font, PatternFill, Protection,
@@ -28,6 +25,8 @@ dir = os.getcwd() + '/new version/'
 filess = os.listdir(dir)
 file_list = [files for files in filess if '~' not in files[0]]
 for files in file_list:
+    if 'False' in files:
+        continue
     if files[0] != '~':
         wb = load_workbook(dir + files)
         # Opens the first sheet in the workbook
@@ -123,6 +122,7 @@ for files in file_list:
     y = payment_summary_total[0]
     z = y + str(x)
     cash_total = ws[z].value
+    print(cash_total)
     # Loops through each of the files in order fill in the data
     if cash_total > 0:
         if files == file_list[0]:
