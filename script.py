@@ -53,20 +53,7 @@ for files in file_list:
         z = y + str(x)
         total_deposit = ws[z].value
         # Loops through each of the files in order fill in the data
-        if files == file_list[0]:
-            main_sheet['B7'] = total_deposit
-        elif files == file_list[1]:
-            main_sheet['C7'] = total_deposit
-        elif files == file_list[2]:
-            main_sheet['D7'] = total_deposit
-        elif files == file_list[3]:
-            main_sheet['E7'] = total_deposit
-        elif files == file_list[4]:
-            main_sheet['F7'] = total_deposit
-        elif files == file_list[5]:
-            main_sheet['G7'] = total_deposit
-        elif files == file_list[6]:
-            main_sheet['H7'] = total_deposit
+        xls.check_file('7', total_deposit)
 
         # Gift Cards SOlD 
         sales_summary = xls.search_value_in_column(ws, 'Sales Summary')
