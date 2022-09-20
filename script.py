@@ -4,27 +4,22 @@ from pathlib import Path
 import openpyxl
 import win32com.client as client
 from openpyxl import Workbook, load_workbook
-from openpyxl.styles import (Alignment, Border, Font, PatternFill, Protection,
-                             Side)
 
 import models.xls_to_xlsx as xls
 
 # Clears the new versions folder 
-""" Change Path to your path to new versions folder!!! """
-[f.unlink() for f in Path("C:\\Users\\12392\\Desktop\\Github\\Toast-Expense-Weekly_Sales\\new version").glob("*") if f.is_file()]
+[f.unlink() for f in Path("C:\\Users\\Chest\\Documents\\GitHub\\Toast-Expense-Weekly_Sales\\new version").glob("*") if f.is_file()]
 
 # Converts the xls file to xlsx format
 xls.converter()
 
-# Creates the new Workbook
-main_workbook = load_workbook(os.getcwd() + "\\template\\template.xlsx")
-main_sheet = main_workbook.active
-main_sheet.title = "Summary" # Fill in the date with the last date
-
+# Path for new version folder
 dir = os.getcwd() + '/new version/'
-
+# Lists all the files in new version
 filess = os.listdir(dir)
+# Removes all of the lock files in the new version folder
 file_list = [files for files in filess if '~' not in files[0]]
+# Loops through all the files
 for files in file_list:
     if 'False' in files:
         continue
@@ -34,11 +29,7 @@ for files in file_list:
         ws = wb['Summary']
         # Gets the Date
         if files == file_list[0]:
-            temp_date = ws['A2'].value
-            split = temp_date.split('-')
-            date = split[0].strip()
-            # Checks where to put date
-            main_sheet['A4'] = date
+            xls.date(files, file_list, ws)
 
         """ Start of Everything """
         # Locates Payment Summary 
@@ -53,7 +44,7 @@ for files in file_list:
         z = y + str(x)
         total_deposit = ws[z].value
         # Loops through each of the files in order fill in the data
-        xls.check_file('7', total_deposit)
+        xls.check_file(files, file_list, '7', total_deposit)
 
         # Gift Cards SOlD 
         sales_summary = xls.search_value_in_column(ws, 'Sales Summary')
@@ -66,20 +57,7 @@ for files in file_list:
             gift_sold = float(gift_sold_value.strip('$'))
             # Loops through each of the files in order fill in the data
             if gift_sold > 0:
-                if files == file_list[0]:
-                    main_sheet['B8'] = gift_sold
-                elif files == file_list[1]:
-                    main_sheet['C8'] = gift_sold
-                elif files == file_list[2]:
-                    main_sheet['D8'] = gift_sold
-                elif files == file_list[3]:
-                    main_sheet['E8'] = gift_sold
-                elif files == file_list[4]:
-                    main_sheet['F8'] = gift_sold
-                elif files == file_list[5]:
-                    main_sheet['G8'] = gift_sold
-                elif files == file_list[6]:
-                    main_sheet['H8'] = gift_sold
+                xls.check_file(files, file_list, '8',  gift_sold)
 
     # Gift Cards REDEEMED
     gift_card_coords = xls.search_value_in_column(ws, 'Gift Card', 'B')
@@ -89,20 +67,7 @@ for files in file_list:
         z = y + str(x)
         gift_card_total = ws[z].value
         # Loops through each of the files in order fill in the data
-        if files == file_list[0]:
-            main_sheet['B9'] = gift_card_total
-        elif files == file_list[1]:
-            main_sheet['C9'] = gift_card_total
-        elif files == file_list[2]:
-            main_sheet['D9'] = gift_card_total
-        elif files == file_list[3]:
-            main_sheet['E9'] = gift_card_total
-        elif files == file_list[4]:
-            main_sheet['F9'] = gift_card_total
-        elif files == file_list[5]:
-            main_sheet['G9'] = gift_card_total
-        elif files == file_list[6]:
-            main_sheet['H9'] = gift_card_total
+        xls.check_file(files, file_list, '9', gift_card_total)
 
     # CASH SALES
     cash_location = xls.search_value_in_column(ws, 'Cash', 'B')
@@ -112,44 +77,20 @@ for files in file_list:
     cash_total = ws[z].value
     # Loops through each of the files in order fill in the data
     if cash_total > 0:
-        if files == file_list[0]:
-            main_sheet['B12'] = cash_total
-        elif files == file_list[1]:
-            main_sheet['C12'] = cash_total
-        elif files == file_list[2]:
-            main_sheet['D12'] = cash_total
-        elif files == file_list[3]:
-            main_sheet['E12'] = cash_total
-        elif files == file_list[4]:
-            main_sheet['F12'] = cash_total
-        elif files == file_list[5]:
-            main_sheet['G12'] = cash_total
-        elif files == file_list[6]:
-            main_sheet['H12'] = cash_total
+        xls.check_file(files, file_list, '12', cash_total)
 
     # UBER EATS
     uber_eats = xls.search_value_in_column(ws, 'Uber Eats', 'B')
     x = uber_eats[1]
     if 'None' not in str(x):
-        y = payment_summary_total[0]
-        z = y + str(x)
+        z = 'T' + str(x)
         uber_eats_total = ws[z].value
         # Loops through each of the files in order fill in the data
-        if uber_eats_total > 0:
-            if files == file_list[0]:
-                main_sheet['B13'] = uber_eats_total
-            elif files == file_list[1]:
-                main_sheet['C13'] = uber_eats_total
-            elif files == file_list[2]:
-                main_sheet['D13'] = uber_eats_total
-            elif files == file_list[3]:
-                main_sheet['E13'] = uber_eats_total
-            elif files == file_list[4]:
-                main_sheet['F13'] = uber_eats_total
-            elif files == file_list[5]:
-                main_sheet['G13'] = uber_eats_total
-            elif files == file_list[6]:
-                main_sheet['H13'] = uber_eats_total
+        if uber_eats_total is None:
+            pass
+        else:
+            if uber_eats_total > 0:
+                xls.check_file(files, file_list, '13', uber_eats_total)
 
     # TIPS PAID
     tips_coords = 'E5'
@@ -169,75 +110,54 @@ for files in file_list:
         tips_paid = round(float(tips) + float(gratuity),3)
     # Loops through each of the files in order fill in the data
     if tips_paid > 0:
-        if files == file_list[0]:
-            main_sheet['B14'] = tips_paid
-        elif files == file_list[1]:
-            main_sheet['C14'] = tips_paid
-        elif files == file_list[2]:
-            main_sheet['D14'] = tips_paid
-        elif files == file_list[3]:
-            main_sheet['E14'] = tips_paid
-        elif files == file_list[4]:
-            main_sheet['F14'] = tips_paid
-        elif files == file_list[5]:
-            main_sheet['G14'] = tips_paid
-        elif files == file_list[6]:
-            main_sheet['H14'] = tips_paid
+        xls.check_file(files, file_list, '14', tips_paid)
 
     # S-FOOD
     sales_categories = xls.search_value_in_column(ws, 'Sales Categories')
     food = xls.search_value_in_column(ws, 'Food', 'B')
+    no_category = xls.search_value_in_column(ws, 'No Category', 'B')
+    if 'None' != no_category:
+        no_category_coords = 'E' + str(no_category[1])
+    else:
+        no_category = None
     food_amnt_coords = 'E' + str(food[1])
     na_beverage_amnt_coords = 'E' + str(food[1]- 1)
+    if no_category_coords != None:
+        no_category_total = ws[no_category_coords].value
     food_total = ws[food_amnt_coords].value
     na_beverage_total = ws[na_beverage_amnt_coords].value
-    final = food_total + na_beverage_total
+    if no_category_total == None:
+        final = food_total + na_beverage_total
+    else:
+        final = food_total + na_beverage_total + no_category_total
     # Loops through each of the files in order fill in the data
     if final > 0:
-        if files == file_list[0]:
-            main_sheet['B15'] = final
-        elif files == file_list[1]:
-            main_sheet['C15'] = final
-        elif files == file_list[2]:
-            main_sheet['D15'] = final
-        elif files == file_list[3]:
-            main_sheet['E15'] = final
-        elif files == file_list[4]:
-            main_sheet['F15'] = final
-        elif files == file_list[5]:
-            main_sheet['G15'] = final
-        elif files == file_list[6]:
-            main_sheet['H15'] = final
+        xls.check_file(files, file_list, '15', final)
 
     #S-BAR
-    no_category = xls.search_value_in_column(ws, 'No Category', 'B')
     food_beverage_total = 'E' + str(no_category[1] + 1)
     temp3 = ws[food_beverage_total].value
     sub = temp3 - final
     # Loops through each of the files in order fill in the data
     if sub > 0:
-        if files == file_list[0]:
-            main_sheet['B16'] = sub
-        elif files == file_list[1]:
-            main_sheet['C16'] = sub
-        elif files == file_list[2]:
-            main_sheet['D16'] = sub
-        elif files == file_list[3]:
-            main_sheet['E16'] = sub
-        elif files == file_list[4]:
-            main_sheet['F16'] = sub
-        elif files == file_list[5]:
-            main_sheet['G16'] = sub
-        elif files == file_list[6]:
-            main_sheet['H16'] = sub
+        xls.check_file(files, file_list, '16', sub)
+
 
     # COMP PROMO
     comp_item_location = xls.search_value_in_column(ws, 'Comp % Item', 'B')
     early_bird_location = xls.search_value_in_column(ws, 'EARLY BIRD', 'B')
     happy_hr_location = xls.search_value_in_column(ws, 'HAPPY HOUR', 'B')
     open_check_dollar_location = xls.search_value_in_column(ws, 'Open $ Check', 'B')
+    comp_percent_check = xls.search_value_in_column(ws, 'Comp % Check', 'B')
+    open_percent_check = xls.search_value_in_column(ws, 'Open % Check', 'B')
     checks = 0
     # Finds the location using the row
+    if None not in open_percent_check:
+        open_percent_checked = 'D' + str(open_percent_check[1])
+        checks += ws[open_percent_checked].value
+    if None not in comp_percent_check:
+        comp_percent_checked = 'D' + str(comp_percent_check[1])
+        checks += ws[comp_percent_checked].value
     if None not in comp_item_location:
         comp_item_coords = 'D' + str(comp_item_location[1])
         checks += ws[comp_item_coords].value
@@ -251,20 +171,7 @@ for files in file_list:
         open_check_coords = 'D' + str(open_check_dollar_location[1])
         checks += ws[open_check_coords].value
     # Loops through each of the files in order fill in the data
-    if files == file_list[0]:
-        main_sheet['B18'] = checks
-    elif files == file_list[1]:
-        main_sheet['C18'] = checks
-    elif files == file_list[2]:
-        main_sheet['D18'] = checks
-    elif files == file_list[3]:
-        main_sheet['E18'] = checks
-    elif files == file_list[4]:
-        main_sheet['F18'] = checks
-    elif files == file_list[5]:
-        main_sheet['G18'] = checks
-    elif files == file_list[6]:
-        main_sheet['H18'] = checks
+    xls.check_file(files, file_list, '18', checks)
 
     # MGR DISCOUNT
     check_discounts = xls.search_value_in_column(ws, 'Check Discounts')
@@ -273,20 +180,7 @@ for files in file_list:
         price = 'D' + str(manager_comp[1])
         final = ws[price].value
         # Loops through each of the files in order fill in the data
-        if files == file_list[0]:
-            main_sheet['B19'] = final
-        elif files == file_list[1]:
-            main_sheet['C19'] = final
-        elif files == file_list[2]:
-            main_sheet['D19'] = final
-        elif files == file_list[3]:
-            main_sheet['E19'] = final
-        elif files == file_list[4]:
-            main_sheet['F19'] = final
-        elif files == file_list[5]:
-            main_sheet['G19'] = final
-        elif files == file_list[6]:
-            main_sheet['H19'] = final
+        xls.check_file(files, file_list, '19', final)
 
     #SERV.DISCOUNT
     employee_discount = xls.search_value_in_column(ws, 'Employee Discount - Check', 'B')
@@ -294,20 +188,7 @@ for files in file_list:
         price = 'D' + str(employee_discount[1])
         final = ws[price].value
         # Loops through each of the files in order fill in the data
-        if files == file_list[0]:
-            main_sheet['B21'] = final
-        elif files == file_list[1]:
-            main_sheet['C21'] = final
-        elif files == file_list[2]:
-            main_sheet['D21'] = final
-        elif files == file_list[3]:
-            main_sheet['E21'] = final
-        elif files == file_list[4]:
-            main_sheet['F21'] = final
-        elif files == file_list[5]:
-            main_sheet['G21'] = final
-        elif files == file_list[6]:
-            main_sheet['H21'] = final
+        xls.check_file(files, file_list, '21', final)
 
     # QSA
     qsa_location = xls.search_value_in_column(ws, 'QSA', 'B')
@@ -315,43 +196,17 @@ for files in file_list:
         qsa_coords = 'D' + str(qsa_location[1])
         qsa = ws[qsa_coords].value
         # Loops through each of the files in order fill in the data
-        if files == file_list[0]:
-            main_sheet['B22'] = qsa
-        elif files == file_list[1]:
-            main_sheet['C22'] = qsa
-        elif files == file_list[2]:
-            main_sheet['D22'] = qsa
-        elif files == file_list[3]:
-            main_sheet['E22'] = qsa
-        elif files == file_list[4]:
-            main_sheet['F22'] = qsa
-        elif files == file_list[5]:
-            main_sheet['G22'] = qsa
-        elif files == file_list[6]:
-            main_sheet['H22'] = qsa
+        xls.check_file(files, file_list, '22', qsa)
 
     # SALES TAX
     price = ws['C5'].value
     takes = price[1:]
     final = float(takes)
     # Loops through each of the files in order fill in the data
-    if main_sheet['B23'].value == None:
-        main_sheet['B23'] = final
-    elif main_sheet['C23'].value == None:
-        main_sheet['C23'] = final
-    elif main_sheet['D23'].value == None:
-        main_sheet['D23'] = final
-    elif main_sheet['E23'].value == None:
-        main_sheet['E23'] = final
-    elif main_sheet['F23'].value == None:
-        main_sheet['F23'] = final
-    elif main_sheet['G23'].value == None:
-        main_sheet['G23'] = final
-    elif main_sheet['H23'].value == None:
-        main_sheet['H23'] = final
+    xls.check_file(files, file_list, '23', final)
 
 # Clears the new versions folder
-[f.unlink() for f in Path("C:\\Users\\12392\\Desktop\\Github\\Toast-Expense-Weekly_Sales\\new version").glob("*") if f.is_file()]
+[f.unlink() for f in Path("C:\\Users\\Chest\\Documents\\GitHub\\Toast-Expense-Weekly_Sales\\new version").glob("*") if f.is_file()]
 print("I'm All done!")
 # Saves the New Weekly Sales Report
-main_workbook.save("Weekly_Sales.xlsx")
+xls.save()
